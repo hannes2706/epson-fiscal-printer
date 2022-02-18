@@ -6,16 +6,10 @@ namespace epson_fiscal_printer
     {
         private string _data;
         private string _host;
-        private int _paymentType;
 
-        /**
-            * paymentType = 0 cash
-            * paymentType = 2 creditcard
-        **/
-        public EpsonFiscalPrinter(string host, int paymentType)
+        public EpsonFiscalPrinter(string host)
         {
             _host = $"http://{host}/cgi-bin/fpmate.cgi?devid=local_printer&timeout=500";
-            _paymentType = paymentType;
         }
 
         public void BeginInvoice()
@@ -28,10 +22,10 @@ namespace epson_fiscal_printer
             _data += $"<printRecItem operator=\"10\" description=\"{name}\" quantity=\"1\" unitPrice=\"{price}\" department=\"{department}\" justification=\"1\" />";
         }
 
-        public void EndInvoice(string message = "Thank you")
+        public void EndInvoice(PaymentType paymentType, string message = "Thank you")
         {
 
-            _data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"0\" paymentType=\"{_paymentType}\" index=\"0\" justification=\"1\" />";
+            _data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"0\" paymentType=\"{(int)paymentType}\" index=\"0\" justification=\"1\" />";
             _data += $"<printRecMessage operator=\"10\" messageType=\"3\" index=\"1\" font=\"4\" message=\"{message}\" />";
             _data += $"<endFiscalReceipt operator=\"10\" /></printerFiscalReceipt>";
 
@@ -76,15 +70,7 @@ namespace epson_fiscal_printer
             Stream requestStream = request.GetRequestStream();
             requestStream.Write(bytes, 0, bytes.Length);
             requestStream.Close();
-            HttpWebResponse response;
-
-            response = (HttpWebResponse)request.GetResponse();
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                Stream responseStream = response.GetResponseStream();
-                string responseStr = new StreamReader(responseStream).ReadToEnd();
-                Console.WriteLine("Response " + responseStr);
-            }
+            request.GetResponse();
         }
     }
 }
