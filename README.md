@@ -12,8 +12,8 @@ I have tested this library with the Epson FP81.
 EpsonFiscalPrinter epsonFiscalPrinter = new EpsonFiscalPrinter("<ip_address>");
 
 epsonFiscalPrinter.BeginInvoice();
-epsonFiscalPrinter.AddProduct("Tagespreis", 21.9m);
-epsonFiscalPrinter.AddProduct("Halbtagespreis", 5m);
+epsonFiscalPrinter.AddProduct("Your product", 21.9m);
+epsonFiscalPrinter.AddProduct("Another product", 5m);
 epsonFiscalPrinter.EndInvoice(PaymentType.CASH);
 
 epsonFiscalPrinter.Print();
