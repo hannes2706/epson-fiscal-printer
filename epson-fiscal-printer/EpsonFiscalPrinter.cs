@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 
 namespace epson_fiscal_printer
 {
@@ -59,18 +60,15 @@ namespace epson_fiscal_printer
                     "</s:Envelope>";
         }
 
-        public void Print()
+        public async Task<bool> Print()
         {
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(_host);
-            byte[] bytes;
-            bytes = System.Text.Encoding.ASCII.GetBytes(_data);
-            request.ContentType = "text/xml; encoding='utf-8'";
-            request.ContentLength = bytes.Length;
-            request.Method = "POST";
-            Stream requestStream = request.GetRequestStream();
-            requestStream.Write(bytes, 0, bytes.Length);
-            requestStream.Close();
-            request.GetResponse();
+            StringContent content = new StringContent(_data, Encoding.UTF8, "text/xml");
+
+            HttpClient httpClient = new HttpClient();
+            
+            HttpResponseMessage response = await httpClient.PostAsync(_host, content);
+
+            return response.IsSuccessStatusCode;
         }
     }
 }
