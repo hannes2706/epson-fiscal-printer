@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Text;
+﻿using System.Text;
 
 namespace epson_fiscal_printer
 {
@@ -43,9 +42,9 @@ namespace epson_fiscal_printer
             _data += "<printerNonFiscal><beginNonFiscal operator=\"10\" />";
         }
 
-        public void AddTextToDocument(string text)
+        public void AddTextToDocument(string text, FontType fontType = FontType.NORMAL)
         {
-            _data += $"<printNormal  operator=\"10\" font=\"4\" data=\"{text}\" />";
+            _data += $"<printNormal  operator=\"10\" font=\"{(int)fontType}\" data=\"{text}\" />";
         }
 
         public void EndDocument()
@@ -69,6 +68,11 @@ namespace epson_fiscal_printer
             HttpResponseMessage response = await httpClient.PostAsync(_host, content);
 
             return response.IsSuccessStatusCode;
+        }
+
+        public override string ToString()
+        {
+            return _data;
         }
     }
 }
