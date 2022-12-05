@@ -24,7 +24,7 @@ epsonFiscalPrinter.Print();
 ```c#
 EpsonFiscalPrinter epsonFiscalPrinter = new EpsonFiscalPrinter("<ip_address>");
 epsonFiscalPrinter.BeginDocument();
-epsonFiscalPrinter.AddTextToDocument("Hello world!");
+epsonFiscalPrinter.AddTextToDocument("Hello world!", FontType.LARGE);
 epsonFiscalPrinter.AddTextToDocument("Here you can write whatever you want");
 epsonFiscalPrinter.EndDocument();
 
