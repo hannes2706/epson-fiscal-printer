@@ -25,7 +25,7 @@ namespace epson_fiscal_printer
         public void EndInvoice(PaymentType paymentType, string message = "Thank you")
         {
 
-            _data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"0\" paymentType=\"{(int)paymentType}\" index=\"0\" justification=\"1\" />";
+            _data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"0\" paymentType=\"{(int)paymentType}\" index=\"1\" justification=\"1\" />";
             _data += $"<printRecMessage operator=\"10\" messageType=\"3\" index=\"1\" font=\"4\" message=\"{message}\" />";
             _data += $"<endFiscalReceipt operator=\"10\" /></printerFiscalReceipt>";
 
