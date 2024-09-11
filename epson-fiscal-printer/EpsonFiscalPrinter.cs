@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Xml.Linq;
 
 namespace epson_fiscal_printer
 {
@@ -9,7 +10,7 @@ namespace epson_fiscal_printer
 
         public EpsonFiscalPrinter(string host)
         {
-            _host = $"http://{host}/cgi-bin/fpmate.cgi?devid=local_printer&timeout=500";
+            _host = $"http://{host}/cgi-bin/fpmate.cgi?devid=local_printer";
         }
 
         public void BeginInvoice()
@@ -24,7 +25,6 @@ namespace epson_fiscal_printer
 
         public void EndInvoice(PaymentType paymentType, string message = "Thank you")
         {
-
             _data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"0\" paymentType=\"{(int)paymentType}\" index=\"1\" justification=\"1\" />";
             _data += $"<printRecMessage operator=\"10\" messageType=\"3\" index=\"1\" font=\"4\" message=\"{message}\" />";
             _data += $"<endFiscalReceipt operator=\"10\" /></printerFiscalReceipt>";
@@ -59,15 +59,46 @@ namespace epson_fiscal_printer
                     "</s:Envelope>";
         }
 
-        public async Task<bool> Print()
+        public async Task<EpsonFiscalPrinterResponse> Print()
         {
             StringContent content = new StringContent(_data, Encoding.UTF8, "text/xml");
 
             HttpClient httpClient = new HttpClient();
-            
+            httpClient.Timeout = TimeSpan.FromSeconds(50);            
             HttpResponseMessage response = await httpClient.PostAsync(_host, content);
 
-            return response.IsSuccessStatusCode;
+            if (!response.IsSuccessStatusCode) {
+                var epsonResonse = new EpsonFiscalPrinterResponse();
+                epsonResonse.IsSuccess = false;
+                epsonResonse.Code = response.StatusCode.ToString();
+                epsonResonse.Status = await response.Content.ReadAsStringAsync();
+                return epsonResonse;
+            }
+
+            return ParseResponse(await response.Content.ReadAsStringAsync());
+        }
+
+        public EpsonFiscalPrinterResponse ParseResponse(string response)
+        {
+            XDocument xmlDoc = XDocument.Parse(response);
+
+            var epsonResonse = new EpsonFiscalPrinterResponse();
+
+            XElement responseElement = xmlDoc.Element("response");
+
+            epsonResonse.IsSuccess = bool.Parse(responseElement.Attribute("success").Value.ToString());
+            epsonResonse.Status = responseElement.Attribute("status").Value;
+            epsonResonse.Code = responseElement.Attribute("code").Value;
+
+            var addInfoElement = xmlDoc.Descendants("addInfo").FirstOrDefault();
+
+            if (addInfoElement != null)
+            {
+                epsonResonse.AdditionalInfo = addInfoElement.Value;
+            }
+
+
+            return epsonResonse;
         }
 
         public override string ToString()
