@@ -82,15 +82,21 @@ namespace epson_fiscal_printer
         {
             XDocument xmlDoc = XDocument.Parse(response);
 
+
+            XElement responseElement = xmlDoc.Descendants("response").FirstOrDefault();
+
             var epsonResonse = new EpsonFiscalPrinterResponse();
 
-            XElement responseElement = xmlDoc.Element("response");
+            if (responseElement == null)
+            {
+                return new EpsonFiscalPrinterResponse() { IsSuccess = false, Status = "INVALID RESPONSE", Code = "-1" };
+            }
 
             epsonResonse.IsSuccess = bool.Parse(responseElement.Attribute("success").Value.ToString());
             epsonResonse.Status = responseElement.Attribute("status").Value;
             epsonResonse.Code = responseElement.Attribute("code").Value;
 
-            var addInfoElement = xmlDoc.Descendants("addInfo").FirstOrDefault();
+            var addInfoElement = responseElement.Descendants("addInfo").FirstOrDefault();
 
             if (addInfoElement != null)
             {
