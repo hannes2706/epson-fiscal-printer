@@ -16,7 +16,11 @@ epsonFiscalPrinter.AddProduct("Your product", 21.9m);
 epsonFiscalPrinter.AddProduct("Another product", 5m);
 epsonFiscalPrinter.EndInvoice(PaymentType.CASH);
 
-epsonFiscalPrinter.Print();
+var epsonFiscalPrinterResponse = epsonFiscalPrinter.Print();
+
+if (!epsonFiscalPrinterResponse.IsSuccess) {
+  Console.WriteLine("ErrorResponse code:" + epsonFiscalPrinterResponse.Code + " status: " + epsonFiscalPrinterResponse.Status + " AdditionalInfo: " + epsonFiscalPrinterResponse.AdditionalInfo);
+}
 ```
 
 # Print document
@@ -28,7 +32,7 @@ epsonFiscalPrinter.AddTextToDocument("Hello world!", FontType.LARGE);
 epsonFiscalPrinter.AddTextToDocument("Here you can write whatever you want");
 epsonFiscalPrinter.EndDocument();
 
-epsonFiscalPrinter.Print();        
+epsonFiscalPrinter.Print();     
 ```
 
 # Payment types
