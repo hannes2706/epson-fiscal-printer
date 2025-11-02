@@ -85,26 +85,43 @@ namespace epson_fiscal_printer
 
             XElement responseElement = xmlDoc.Descendants("response").FirstOrDefault();
 
-            var epsonResonse = new EpsonFiscalPrinterResponse();
+            var epsonResponse = new EpsonFiscalPrinterResponse();
 
             if (responseElement == null)
             {
                 return new EpsonFiscalPrinterResponse() { IsSuccess = false, Status = "INVALID RESPONSE", Code = "-1" };
             }
 
-            epsonResonse.IsSuccess = bool.Parse(responseElement.Attribute("success").Value.ToString());
-            epsonResonse.Status = responseElement.Attribute("status").Value;
-            epsonResonse.Code = responseElement.Attribute("code").Value;
 
-            var addInfoElement = responseElement.Descendants("addInfo").FirstOrDefault();
+            var successAttr = (string?)responseElement.Attribute("success");
+            epsonResponse.IsSuccess = successAttr != null && bool.TryParse(successAttr, out var s) && s;
+
+            epsonResponse.Status = (string?)responseElement.Attribute("status") ?? "";
+            epsonResponse.Code = (string?)responseElement.Attribute("code") ?? "";
+
+            var addInfoElement = responseElement.Element("addInfo");
 
             if (addInfoElement != null)
             {
-                epsonResonse.AdditionalInfo = addInfoElement.Value;
+                var elementListRaw = (string?)addInfoElement.Element("elementList") ?? "";
+                var names = elementListRaw
+                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(n => n.Trim())
+                    .Where(n => n.Length > 0)
+                    .ToArray();
+
+                foreach (var name in names)
+                {
+                    var val = addInfoElement.Element(name)?.Value;
+                    if (val != null)
+                    {
+                        epsonResponse.AdditionalInfo[name] = val;
+                    }
+                }
             }
 
 
-            return epsonResonse;
+            return epsonResponse;
         }
 
         public override string ToString()

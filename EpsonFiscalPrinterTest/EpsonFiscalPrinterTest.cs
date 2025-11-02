@@ -10,7 +10,19 @@ namespace EpsonFiscalPrinterTest
             string response = @"<?xml version=""1.0"" encoding=""utf-8""?> 
                                 <s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/""> 
                                 <s:Body> 
-                                <response success=""true"" code=""SUCCESS"" status=""2"" /> 
+                                <response success=""true"" code=""SUCCESS"" status=""2"">
+                                   <addInfo> 
+                                    <elementList>lastCommand,printerStatus,fiscalReceiptNumber,fiscalReceiptAmount,fiscalReceiptDate, 
+                                    fiscalReceiptTime,zRepNumber</elementList> 
+                                    <lastCommand>74</lastCommand> 
+                                    <printerStatus>20010</printerStatus> 
+                                    <fiscalReceiptNumber>500</fiscalReceiptNumber> 
+                                    <fiscalReceiptAmount>210,56</fiscalReceiptAmount> 
+                                    <fiscalReceiptDate>10/04/2006</fiscalReceiptDate>
+                                    <fiscalReceiptTime>12:34</fiscalReceiptTime>
+                                    <zRepNumber>1</zRepNumber>
+                                    </addInfo>
+                                </response>
                                 </s:Body> 
                                 </s:Envelope>";
         
@@ -22,7 +34,17 @@ namespace EpsonFiscalPrinterTest
                 Code = "SUCCESS",
                 IsSuccess = true,
                 Status = "2",
-                AdditionalInfo = null
+                AdditionalInfo = new Dictionary<string, string>
+                {
+                    { "lastCommand", "74" },
+                    { "printerStatus", "20010" },
+                    { "fiscalReceiptNumber", "500" },
+                    { "fiscalReceiptAmount", "210,56" },
+                    { "fiscalReceiptDate", "10/04/2006" },
+                    { "fiscalReceiptTime", "12:34" },
+                    { "zRepNumber", "1" }
+                }
+
             };
 
 
@@ -31,7 +53,13 @@ namespace EpsonFiscalPrinterTest
             Assert.Equal(parsedResponse.IsSuccess, expectedResponse.IsSuccess);
             Assert.Equal(parsedResponse.Status, expectedResponse.Status);
             Assert.Equal(parsedResponse.Code, expectedResponse.Code);
-            Assert.Equal(parsedResponse.AdditionalInfo, expectedResponse.AdditionalInfo);
+
+            Assert.Equal(parsedResponse.FiscalReceiptNumber, expectedResponse.FiscalReceiptNumber);
+            Assert.Equal(parsedResponse.FiscalReceiptAmount, expectedResponse.FiscalReceiptAmount);
+            Assert.Equal(parsedResponse.FiscalReceiptDate, expectedResponse.FiscalReceiptDate);
+            Assert.Equal(parsedResponse.FiscalReceiptTime, expectedResponse.FiscalReceiptTime);
+            Assert.Equal(parsedResponse.FiscalReceiptDateTime, expectedResponse.FiscalReceiptDateTime);
+            Assert.Equal(parsedResponse.ZRepNumber, expectedResponse.ZRepNumber);
         }
 
         [Fact]
@@ -51,8 +79,7 @@ namespace EpsonFiscalPrinterTest
             {
                 Code = "LAN_TIME_OUT",
                 IsSuccess = false,
-                Status = "0",
-                AdditionalInfo = null
+                Status = "0"
             };
 
 
@@ -61,7 +88,6 @@ namespace EpsonFiscalPrinterTest
             Assert.Equal(parsedResponse.IsSuccess, expectedResponse.IsSuccess);
             Assert.Equal(parsedResponse.Status, expectedResponse.Status);
             Assert.Equal(parsedResponse.Code, expectedResponse.Code);
-            Assert.Equal(parsedResponse.AdditionalInfo, expectedResponse.AdditionalInfo);
         }
 
         [Fact]
@@ -87,7 +113,7 @@ namespace EpsonFiscalPrinterTest
             {
                 Code = "PRINTER ERROR",
                 IsSuccess = false,
-                Status = "21",
+                Status = "21"
             };
 
 
@@ -97,6 +123,7 @@ namespace EpsonFiscalPrinterTest
             Assert.Equal(parsedResponse.Status, expectedResponse.Status);
             Assert.Equal(parsedResponse.Code, expectedResponse.Code);
             Assert.Contains("lastCommand", parsedResponse.AdditionalInfo);
+            Assert.Contains("printerStatus", parsedResponse.AdditionalInfo);
         }
     }
 }
