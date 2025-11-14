@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
 namespace epson_fiscal_printer
 {
@@ -43,8 +38,7 @@ namespace epson_fiscal_printer
         public string? FiscalReceiptDateRaw => Get("fiscalReceiptDate");
 
         public DateOnly? FiscalReceiptDate =>
-            DateOnly.TryParseExact(FiscalReceiptDateRaw, "dd/MM/yyyy",
-                CultureInfo.InvariantCulture, DateTimeStyles.None, out var d)
+            DateOnly.TryParse(FiscalReceiptDateRaw, out var d)
                 ? d : null;
 
         public string? FiscalReceiptTimeRaw => Get("fiscalReceiptTime");

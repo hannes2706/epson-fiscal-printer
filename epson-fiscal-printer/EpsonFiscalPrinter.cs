@@ -23,9 +23,9 @@ namespace epson_fiscal_printer
             _data += $"<printRecItem operator=\"10\" description=\"{name}\" quantity=\"1\" unitPrice=\"{price}\" department=\"{department}\" justification=\"1\" />";
         }
 
-        public void EndInvoice(PaymentType paymentType, string message = "Thank you")
+        public void EndInvoice(PaymentType paymentType, decimal givenMoney, string message = "Thank you")
         {
-            _data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"0\" paymentType=\"{(int)paymentType}\" index=\"1\" justification=\"1\" />";
+            _data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"{givenMoney}\" paymentType=\"{(int)paymentType}\" index=\"1\" justification=\"1\" />";
             _data += $"<printRecMessage operator=\"10\" messageType=\"3\" index=\"1\" font=\"4\" message=\"{message}\" />";
             _data += $"<endFiscalReceipt operator=\"10\" /></printerFiscalReceipt>";
 
@@ -68,11 +68,11 @@ namespace epson_fiscal_printer
             HttpResponseMessage response = await httpClient.PostAsync(_host, content);
 
             if (!response.IsSuccessStatusCode) {
-                var epsonResonse = new EpsonFiscalPrinterResponse();
-                epsonResonse.IsSuccess = false;
-                epsonResonse.Code = response.StatusCode.ToString();
-                epsonResonse.Status = await response.Content.ReadAsStringAsync();
-                return epsonResonse;
+                var epsonResponse = new EpsonFiscalPrinterResponse();
+                epsonResponse.IsSuccess = false;
+                epsonResponse.Code = response.StatusCode.ToString();
+                epsonResponse.Status = "NETWORK_ERROR";
+                return epsonResponse;
             }
 
             return ParseResponse(await response.Content.ReadAsStringAsync());

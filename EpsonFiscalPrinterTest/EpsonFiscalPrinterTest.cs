@@ -18,7 +18,7 @@ namespace EpsonFiscalPrinterTest
                                     <printerStatus>20010</printerStatus> 
                                     <fiscalReceiptNumber>500</fiscalReceiptNumber> 
                                     <fiscalReceiptAmount>210,56</fiscalReceiptAmount> 
-                                    <fiscalReceiptDate>10/04/2006</fiscalReceiptDate>
+                                    <fiscalReceiptDate>10/4/2006</fiscalReceiptDate>
                                     <fiscalReceiptTime>12:34</fiscalReceiptTime>
                                     <zRepNumber>1</zRepNumber>
                                     </addInfo>
@@ -40,7 +40,7 @@ namespace EpsonFiscalPrinterTest
                     { "printerStatus", "20010" },
                     { "fiscalReceiptNumber", "500" },
                     { "fiscalReceiptAmount", "210,56" },
-                    { "fiscalReceiptDate", "10/04/2006" },
+                    { "fiscalReceiptDate", "10/4/2006" },
                     { "fiscalReceiptTime", "12:34" },
                     { "zRepNumber", "1" }
                 }
