@@ -1,11 +1,13 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Security;
+using System.Text;
 using System.Xml.Linq;
 
 namespace epson_fiscal_printer
 {
     public class EpsonFiscalPrinter
     {
-        private string _data;
+        public string Data { get; private set; }
         private string _host;
 
         public EpsonFiscalPrinter(string host)
@@ -15,53 +17,54 @@ namespace epson_fiscal_printer
 
         public void BeginInvoice()
         {
-            _data += "<printerFiscalReceipt><beginFiscalReceipt operator=\"10\" />";
+            Data = "";
+            Data += "<printerFiscalReceipt><beginFiscalReceipt operator=\"10\" />";
         }
 
         public void AddProduct(string name, decimal price, int department = 1)
         {
-            _data += $"<printRecItem operator=\"10\" description=\"{name}\" quantity=\"1\" unitPrice=\"{price}\" department=\"{department}\" justification=\"1\" />";
+            Data += $"<printRecItem operator=\"10\" description=\"{XmlEscape(name)}\" quantity=\"1\" unitPrice=\"{price.ToString(CultureInfo.InvariantCulture)}\" department=\"{department}\" justification=\"1\" />";
         }
 
         public void EndInvoice(PaymentType paymentType, decimal givenMoney, string message = "Thank you")
         {
-            _data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"{givenMoney}\" paymentType=\"{(int)paymentType}\" index=\"1\" justification=\"1\" />";
-            _data += $"<printRecMessage operator=\"10\" messageType=\"3\" index=\"1\" font=\"4\" message=\"{message}\" />";
-            _data += $"<endFiscalReceipt operator=\"10\" /></printerFiscalReceipt>";
+            Data += $"<printRecTotal operator=\"10\" description=\"PAGAMENTO\" payment=\"{givenMoney.ToString(CultureInfo.InvariantCulture)}\" paymentType=\"{(int)paymentType}\" index=\"1\" justification=\"1\" />";
+            Data += $"<printRecMessage operator=\"10\" messageType=\"3\" index=\"1\" font=\"4\" message=\"{XmlEscape(message)}\" />";
+            Data += $"<endFiscalReceipt operator=\"10\" /></printerFiscalReceipt>";
 
-            _data = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+            Data = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
                     "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                     "<s:Body>" +
-                    _data +
+                    Data +
                     "</s:Body>" +
                     "</s:Envelope>";
         }
 
         public void BeginDocument()
         {
-            _data += "<printerNonFiscal><beginNonFiscal operator=\"10\" />";
+            Data += "<printerNonFiscal><beginNonFiscal operator=\"10\" />";
         }
 
         public void AddTextToDocument(string text, FontType fontType = FontType.NORMAL)
         {
-            _data += $"<printNormal  operator=\"10\" font=\"{(int)fontType}\" data=\"{text}\" />";
+            Data += $"<printNormal  operator=\"10\" font=\"{(int)fontType}\" data=\"{text}\" />";
         }
 
         public void EndDocument()
         {
-            _data += "<endNonFiscal operator=\"10\" /></printerNonFiscal>";
+            Data += "<endNonFiscal operator=\"10\" /></printerNonFiscal>";
 
-            _data = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+            Data = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
                     "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                     "<s:Body>" +
-                    _data +
+                    Data +
                     "</s:Body>" +
                     "</s:Envelope>";
         }
 
         public async Task<EpsonFiscalPrinterResponse> Print()
         {
-            StringContent content = new StringContent(_data, Encoding.UTF8, "text/xml");
+            StringContent content = new StringContent(Data, Encoding.UTF8, "text/xml");
 
             HttpClient httpClient = new HttpClient();
             httpClient.Timeout = TimeSpan.FromSeconds(50);            
@@ -103,6 +106,13 @@ namespace epson_fiscal_printer
 
             if (addInfoElement != null)
             {
+                // Save raw additional info
+                var raw = addInfoElement.Value;
+                if (!string.IsNullOrWhiteSpace(raw))
+                {
+                    epsonResponse.AdditionalInfo["raw"] = raw;
+                }
+
                 var elementListRaw = (string?)addInfoElement.Element("elementList") ?? "";
                 var names = elementListRaw
                     .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -126,7 +136,9 @@ namespace epson_fiscal_printer
 
         public override string ToString()
         {
-            return _data;
+            return Data;
         }
+
+        private static string XmlEscape(string? s) => SecurityElement.Escape(s) ?? "";
     }
 }
