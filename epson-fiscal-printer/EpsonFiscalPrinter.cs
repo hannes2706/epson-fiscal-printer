@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
+using System.Net.NetworkInformation;
 using System.Security;
 using System.Text;
 using System.Xml.Linq;
@@ -9,6 +11,7 @@ namespace epson_fiscal_printer
     {
         public string Data { get; private set; }
         private string _host;
+        private decimal _totalRefundPrice = 0;
 
         public EpsonFiscalPrinter(string host)
         {
@@ -17,8 +20,7 @@ namespace epson_fiscal_printer
 
         public void BeginInvoice()
         {
-            Data = "";
-            Data += "<printerFiscalReceipt><beginFiscalReceipt operator=\"10\" />";
+            Data = "<printerFiscalReceipt><beginFiscalReceipt operator=\"10\" />";
         }
 
         public void AddProduct(string name, decimal price, int department = 1)
@@ -42,17 +44,58 @@ namespace epson_fiscal_printer
 
         public void BeginDocument()
         {
+            Data = "";
             Data += "<printerNonFiscal><beginNonFiscal operator=\"10\" />";
         }
 
         public void AddTextToDocument(string text, FontType fontType = FontType.NORMAL)
         {
-            Data += $"<printNormal  operator=\"10\" font=\"{(int)fontType}\" data=\"{text}\" />";
+            Data += $"<printNormal operator=\"10\" font=\"{(int)fontType}\" data=\"{text}\" />";
         }
 
         public void EndDocument()
         {
             Data += "<endNonFiscal operator=\"10\" /></printerNonFiscal>";
+
+            Data = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                    "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+                    "<s:Body>" +
+                    Data +
+                    "</s:Body>" +
+                    "</s:Envelope>";
+        }
+
+        public void BeginRefundInvoice(string zReportNumber, string docNumber, DateTime docDate, string fiscalSerialNo = "")
+        {
+            string paddedZReportNumber = zReportNumber.PadLeft(4, '0');
+            string paddedDocNumber = docNumber.PadLeft(4, '0');
+
+            string refundMessage = string.IsNullOrWhiteSpace(fiscalSerialNo)
+                ? $"RESO MERCE N.{paddedZReportNumber}-{paddedDocNumber} del {docDate:dd-MM-yyyy}"
+                : $"REFUND {paddedZReportNumber} {paddedDocNumber} {docDate:ddMMyyyy} {fiscalSerialNo}";
+
+            _totalRefundPrice = 0;
+            Data = $@"<printerFiscalReceipt>
+            <printRecMessage operator=""10"" message=""{refundMessage}"" messageType=""4"" />
+            <beginFiscalReceipt operator=""10""/>";
+        }
+
+        public void AddRefundItem(string name, decimal price, int department)
+        {
+            _totalRefundPrice += price;
+            Data += $"<printRecRefund operator=\"10\" description=\"{XmlEscape(name)}\" quantity=\"1\" unitPrice=\"{price.ToString(CultureInfo.InvariantCulture)}\" department=\"{department}\" justification=\"1\" />";
+        }
+
+        public void EndRefundInvoice(PaymentType paymentType, string message = "RIMBORSO")
+        {
+            Data += $@"
+                <printRecTotal
+                description=""{XmlEscape(message)}""
+                  operator=""10""
+                  payment=""{_totalRefundPrice.ToString(CultureInfo.InvariantCulture)}""
+                  paymentType=""{(int)paymentType}""
+                  index=""1""/>
+                <endFiscalReceipt operator=""10""/></printerFiscalReceipt>";
 
             Data = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
                     "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
