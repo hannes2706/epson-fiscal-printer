@@ -113,15 +113,18 @@ namespace epson_fiscal_printer
             httpClient.Timeout = TimeSpan.FromSeconds(50);            
             HttpResponseMessage response = await httpClient.PostAsync(_host, content);
 
+            string rawResponse = await response.Content.ReadAsStringAsync();
+
             if (!response.IsSuccessStatusCode) {
                 var epsonResponse = new EpsonFiscalPrinterResponse();
+                epsonResponse.RawResponse = rawResponse;
                 epsonResponse.IsSuccess = false;
                 epsonResponse.Code = response.StatusCode.ToString();
                 epsonResponse.Status = "NETWORK_ERROR";
                 return epsonResponse;
             }
 
-            return ParseResponse(await response.Content.ReadAsStringAsync());
+            return ParseResponse(rawResponse);
         }
 
         public EpsonFiscalPrinterResponse ParseResponse(string response)
@@ -132,6 +135,7 @@ namespace epson_fiscal_printer
             XElement responseElement = xmlDoc.Descendants("response").FirstOrDefault();
 
             var epsonResponse = new EpsonFiscalPrinterResponse();
+            epsonResponse.RawResponse = response;
 
             if (responseElement == null)
             {

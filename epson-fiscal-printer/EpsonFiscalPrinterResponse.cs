@@ -12,6 +12,7 @@ namespace epson_fiscal_printer
 
         public Dictionary<string, string> AdditionalInfo { get; set; } = new Dictionary<string, string>();
 
+        public string RawResponse { get; set; }
 
         private string? Get(string key) => AdditionalInfo.TryGetValue(key, out var v) ? v?.Trim() : null;
 
@@ -37,26 +38,27 @@ namespace epson_fiscal_printer
 
         public string? FiscalReceiptDateRaw => Get("fiscalReceiptDate");
 
-        public DateOnly? FiscalReceiptDate =>
-            DateOnly.TryParse(FiscalReceiptDateRaw, out var d)
-                ? d : null;
+        public DateOnly? FiscalReceiptDate => DateOnly.TryParse(FiscalReceiptDateRaw, out var d) ? d : null;
+
+        string[] timeFormats = { "HH:mm", "H:mm", "HH:m", "H:m" };
 
         public string? FiscalReceiptTimeRaw => Get("fiscalReceiptTime");
 
-        public TimeOnly? FiscalReceiptTime =>
-            TimeOnly.TryParseExact(FiscalReceiptTimeRaw, "HH:mm",
-                CultureInfo.InvariantCulture, DateTimeStyles.None, out var t)
-                ? t : null;
+        public TimeOnly? FiscalReceiptTime => TimeOnly.TryParseExact(FiscalReceiptTimeRaw, timeFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var t) ? t : null;
+
+        public string? ReceiptISODateTimeRaw => Get("receiptISODateTime");
 
         public DateTime? FiscalReceiptDateTime
         {
             get
             {
-                if (FiscalReceiptDate is { } d && FiscalReceiptTime is { } t)
+                var iso = ReceiptISODateTimeRaw?.Trim();
+                
+                if (!string.IsNullOrWhiteSpace(iso) && DateTime.TryParseExact(iso, "yyyyMMdd'T'HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
                 {
-                    var dt = d.ToDateTime(t);
-                    return DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+                    return dt;
                 }
+
                 return null;
             }
         }
