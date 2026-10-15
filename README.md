@@ -10,7 +10,7 @@ Import `epson_fiscal_printer` and pass the printer's IP address or hostname to `
 http://<host>/cgi-bin/fpmate.cgi?devid=local_printer
 ```
 
-Pass a host without a URL scheme or path, for example `192.168.1.100`. HTTP uses port 80 by default; an explicit port can be included as `192.168.1.100:8080` if your printer is configured for it. The library does not use raw TCP port 9100.
+Pass a host without a URL scheme or path, for example `192.168.1.100`.
 
 Each example below can be used in a console application that references the library. Replace the example IP address with your printer's address. `Print()` is asynchronous and must be awaited.
 
